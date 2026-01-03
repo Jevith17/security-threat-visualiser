@@ -1,13 +1,12 @@
 
-import time
+import json
 import logging
+from datetime import datetime
+from pathlib import Path
+
 import requests
 
-from config.settings import (
-    POLL_INTERVAL_SECONDS,
-    ABUSEIPDB_API_KEY,
-    TOP_N,
-)
+from config.settings import ABUSEIPDB_API_KEY, TOP_N
 
 
 ABUSEIPDB_URL = "https://api.abuseipdb.com/api/v2/blacklist"
@@ -21,17 +20,13 @@ def setup_logging():
 
 
 def fetch_blacklist():
-    """
-    Fetch top abusive IPs from AbuseIPDB.
-    Returns raw JSON response.
-    """
     headers = {
         "Key": ABUSEIPDB_API_KEY,
         "Accept": "application/json",
     }
 
     params = {
-        "confidenceMinimum": 1,
+        "confidenceMinimum": 25,
         "limit": TOP_N,
     }
 
@@ -44,30 +39,30 @@ def fetch_blacklist():
 
     response.raise_for_status()
     return response.json()
-    
 
 
-def run_worker():
+def save_raw_response(data: dict):
+    timestamp = datetime.utcnow().strftime("%Y-%m-%dT%H-%M-%SZ")
+    output_dir = Path("data/raw")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    file_path = output_dir / f"abuseipdb_blacklist_{timestamp}.json"
+
+    with open(file_path, "w") as f:
+        json.dump(data, f, indent=2)
+
+    logging.info("Saved raw blacklist data to %s", file_path)
+
+
+def main():
     setup_logging()
-    logging.info("AbuseIPDB ingestion worker started")
+    logging.info("Fetching AbuseIPDB blacklist (one-time fetch)")
 
-    while True:
-        try:
-            logging.info("Fetching top %s abusive IPs", TOP_N)
-            data = fetch_blacklist()
+    data = fetch_blacklist()
+    save_raw_response(data)
 
-            # TEMP: just inspect the data
-            logging.info(
-                "Fetched %s records from AbuseIPDB",
-                len(data.get("data", []))
-            )
-
-        except Exception as e:
-            logging.error("Ingestion failed: %s", e)
-
-        logging.info("Sleeping for %s seconds", POLL_INTERVAL_SECONDS)
-        time.sleep(POLL_INTERVAL_SECONDS)
+    logging.info("Ingestion complete. Exiting.")
 
 
 if __name__ == "__main__":
-    run_worker()
+    main()
