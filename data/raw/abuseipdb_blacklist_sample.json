@@ -1,0 +1,37 @@
+{
+  "data": [
+    {
+      "ipAddress": "185.220.101.1",
+      "abuseConfidenceScore": 100,
+      "countryCode": "DE",
+      "usageType": "Tor Exit Node",
+      "isp": "Tor Project",
+      "domain": "",
+      "totalReports": 845,
+      "numDistinctUsers": 67,
+      "lastReportedAt": "2026-01-03T08:45:12+00:00"
+    },
+    {
+      "ipAddress": "45.155.205.233",
+      "abuseConfidenceScore": 87,
+      "countryCode": "RU",
+      "usageType": "Data Center/Web Hosting/Transit",
+      "isp": "Selectel",
+      "domain": "",
+      "totalReports": 312,
+      "numDistinctUsers": 29,
+      "lastReportedAt": "2026-01-03T09:10:44+00:00"
+    },
+    {
+      "ipAddress": "103.152.18.45",
+      "abuseConfidenceScore": 62,
+      "countryCode": "IN",
+      "usageType": "ISP",
+      "isp": "Local ISP",
+      "domain": "",
+      "totalReports": 98,
+      "numDistinctUsers": 11,
+      "lastReportedAt": "2026-01-03T07:02:31+00:00"
+    }
+  ]
+}

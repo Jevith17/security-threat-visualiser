@@ -8,5 +8,7 @@ __pycache__/
 config/settings.py
 
 # Data
-data/
+data/raw/*.json
+!data/raw/abuseipdb_blacklist_sample.json
+
 
