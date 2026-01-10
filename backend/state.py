@@ -8,6 +8,8 @@ from scoring.rules import rule_based_ddos_score
 from scoring.labels import risk_label
 from ml.features import event_to_features
 from sklearn.linear_model import LogisticRegression
+from geo.resolver import ip_to_geo
+
 
 
 class BackendState:
@@ -47,6 +49,10 @@ class BackendState:
         # Attach scores
         enriched = []
         for e in events:
+            geo = ip_to_geo(e.source_ip)
+            if not geo:
+                continue
+
             rule_score = rule_based_ddos_score(e)
             ml_score = model.predict_proba(
                 [event_to_features(e)]
@@ -56,6 +62,7 @@ class BackendState:
 
             enriched.append({
                 **e.to_dict(),
+                "geo": geo,
                 "rule_score": round(rule_score, 3),
                 "ml_score": round(ml_score, 3),
                 "final_score": round(final_score, 3),
