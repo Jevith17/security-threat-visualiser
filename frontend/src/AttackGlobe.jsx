@@ -11,6 +11,7 @@ export default function AttackGlobe() {
     fetch("http://127.0.0.1:8000/events")
       .then(res => res.json())
       .then(data => {
+        console.log("POINTS:", data);
         setPoints(
           data.map(e => ({
             coordinates: [e.geo.lon, e.geo.lat],
@@ -37,19 +38,11 @@ export default function AttackGlobe() {
         </Geographies>
 
         {points.map((p, i) => (
-          <Marker key={i} coordinates={p.coordinates}>
-            <circle
-              r={3}
-              fill={
-                p.risk === "HIGH"
-                  ? "red"
-                  : p.risk === "MEDIUM"
-                  ? "orange"
-                  : "yellow"
-              }
-            />
-          </Marker>
+            <Marker key={i} coordinates={p.coordinates}>
+                <circle r={8} fill="red" stroke="white" strokeWidth={1} />
+            </Marker>
         ))}
+
       </ComposableMap>
     </div>
   );
