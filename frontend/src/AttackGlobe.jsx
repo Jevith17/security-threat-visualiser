@@ -1,32 +1,60 @@
-import { ComposableMap, Geographies, Geography, Marker } from "react-simple-maps";
 import { useEffect, useState } from "react";
+import {
+  ComposableMap,
+  Geographies,
+  Geography,
+  Marker,
+} from "react-simple-maps";
 
-const geoUrl =
+const GEO_URL =
   "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
 export default function AttackGlobe() {
   const [points, setPoints] = useState([]);
+  const [tick, setTick] = useState(0);
 
+  
   useEffect(() => {
     fetch("http://127.0.0.1:8000/events")
-      .then(res => res.json())
-      .then(data => {
-        console.log("POINTS:", data);
+      .then((res) => res.json())
+      .then((data) => {
+        const now = Date.now();
         setPoints(
-          data.map(e => ({
-            coordinates: [e.geo.lon, e.geo.lat],
-            risk: e.risk
-          }))
+          data
+            .filter((e) => e.geo && e.geo.lat && e.geo.lon)
+            .map((e) => ({
+              coordinates: [e.geo.lon, e.geo.lat],
+              risk: e.risk,
+              ts: now, 
+            }))
         );
+      })
+      .catch((err) => {
+        console.error("Failed to fetch events:", err);
       });
   }, []);
 
+  
+  useEffect(() => {
+    const id = setInterval(() => {
+      setTick((t) => t + 1);
+    }, 1000);
+
+    return () => clearInterval(id);
+  }, []);
+
   return (
-    <div style={{ width: "100vw", height: "100vh", background: "#0b1020" }}>
+    <div
+      style={{
+        width: "100vw",
+        height: "100vh",
+        background: "#0b1020",
+      }}
+    >
       <ComposableMap projectionConfig={{ scale: 160 }}>
-        <Geographies geography={geoUrl}>
+        <Geographies geography={GEO_URL}>
           {({ geographies }) =>
-            geographies.map(geo => (
+            geographies.map((geo) => (
               <Geography
                 key={geo.rsmKey}
                 geography={geo}
@@ -37,15 +65,36 @@ export default function AttackGlobe() {
           }
         </Geographies>
 
-        {points.map((p, i) => (
-            <Marker key={i} coordinates={p.coordinates}>
-                <circle r={8} fill="red" stroke="white" strokeWidth={1} />
-            </Marker>
-        ))}
+        {/* Animated attack markers */}
+        {points.map((p, i) => {
+          const age = (Date.now() - p.ts) / 1000; 
+          const maxAge = 10; 
 
+          if (age > maxAge) return null;
+
+          const pulse = Math.sin(age * 3) * 2 + 6; 
+          const opacity = 1 - age / maxAge;
+
+          const color =
+            p.risk === "HIGH"
+              ? "red"
+              : p.risk === "MEDIUM"
+              ? "orange"
+              : "yellow";
+
+          return (
+            <Marker key={i} coordinates={p.coordinates}>
+              <circle
+                r={pulse}
+                fill={color}
+                opacity={opacity}
+                stroke="white"
+                strokeWidth={0.5}
+              />
+            </Marker>
+          );
+        })}
       </ComposableMap>
     </div>
   );
 }
-
-
