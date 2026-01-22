@@ -71,3 +71,5 @@ class BackendState:
 
         self.events = enriched
         self.model = model
+
+state = BackendState()
