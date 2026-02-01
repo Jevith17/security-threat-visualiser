@@ -13,28 +13,34 @@ export default function AttackGlobe() {
   const [points, setPoints] = useState([]);
   const [tick, setTick] = useState(0);
 
-  
+  // WebSocket: live attack stream
   useEffect(() => {
-    fetch("http://127.0.0.1:8000/events")
-      .then((res) => res.json())
-      .then((data) => {
-        const now = Date.now();
-        setPoints(
-          data
-            .filter((e) => e.geo && e.geo.lat && e.geo.lon)
-            .map((e) => ({
-              coordinates: [e.geo.lon, e.geo.lat],
-              risk: e.risk,
-              ts: now, 
-            }))
-        );
-      })
-      .catch((err) => {
-        console.error("Failed to fetch events:", err);
-      });
+    const ws = new WebSocket("ws://127.0.0.1:8000/ws/events");
+
+    ws.onmessage = (msg) => {
+      const events = JSON.parse(msg.data);
+      const now = Date.now();
+
+      setPoints((prev) => [
+        ...prev,
+        ...events
+          .filter((e) => e.geo && e.geo.lat && e.geo.lon)
+          .map((e) => ({
+            coordinates: [e.geo.lon, e.geo.lat],
+            risk: e.risk,
+            ts: now,
+          })),
+      ]);
+    };
+
+    ws.onerror = (err) => {
+      console.error("WebSocket error:", err);
+    };
+
+    return () => ws.close();
   }, []);
 
-  
+  // Heartbeat for animation
   useEffect(() => {
     const id = setInterval(() => {
       setTick((t) => t + 1);
@@ -65,14 +71,14 @@ export default function AttackGlobe() {
           }
         </Geographies>
 
-        {/* Animated attack markers */}
+        {/* Live animated attack markers */}
         {points.map((p, i) => {
-          const age = (Date.now() - p.ts) / 1000; 
-          const maxAge = 10; 
+          const age = (Date.now() - p.ts) / 1000;
+          const maxAge = 10;
 
           if (age > maxAge) return null;
 
-          const pulse = Math.sin(age * 3) * 2 + 6; 
+          const pulse = Math.sin(age * 3) * 2 + 6;
           const opacity = 1 - age / maxAge;
 
           const color =
