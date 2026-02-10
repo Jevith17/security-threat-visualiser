@@ -1,5 +1,6 @@
 from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import asyncio
 import json
 
@@ -20,6 +21,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # ----------------------------
 # REST endpoints
@@ -45,7 +47,6 @@ async def websocket_events(ws: WebSocket):
 
     try:
         while True:
-            
             if last_sent < len(state.events):
                 new_events = state.events[last_sent:]
                 await ws.send_text(json.dumps(new_events))
@@ -53,5 +54,17 @@ async def websocket_events(ws: WebSocket):
 
             await asyncio.sleep(1)
     except Exception:
-        
         pass
+
+
+# ----------------------------
+# Catch-all for undefined routes (prevents 404 spam)
+# ----------------------------
+@app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
+async def catch_all(path: str):
+    return JSONResponse(
+        status_code=404,
+        content={
+            "detail": f"Path '/{path}' not found. Available endpoints: /events, /stats, /ws/events"
+        },
+    )
