@@ -6,7 +6,7 @@ from pathlib import Path
 
 import requests
 
-from config.settings import ABUSEIPDB_API_KEY, TOP_N
+from config.settings import ABUSEIPDB_API_KEY, OUTPUT_DIR, TOP_N
 
 
 ABUSEIPDB_URL = "https://api.abuseipdb.com/api/v2/blacklist"
@@ -20,6 +20,11 @@ def setup_logging():
 
 
 def fetch_blacklist():
+    if not ABUSEIPDB_API_KEY:
+        raise RuntimeError(
+            "ABUSEIPDB_API_KEY is required. Set it in your environment before running ingestion."
+        )
+
     headers = {
         "Key": ABUSEIPDB_API_KEY,
         "Accept": "application/json",
@@ -43,7 +48,7 @@ def fetch_blacklist():
 
 def save_raw_response(data: dict):
     timestamp = datetime.utcnow().strftime("%Y-%m-%dT%H-%M-%SZ")
-    output_dir = Path("data/raw")
+    output_dir = Path(OUTPUT_DIR)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     file_path = output_dir / f"abuseipdb_blacklist_{timestamp}.json"
