@@ -99,12 +99,3 @@ The worker writes timestamped JSON files to `data/raw/` (or `OUTPUT_DIR` if conf
 
 - `GET /events` — returns current in-memory events
 - `WS /ws/events` — streams newly appended events
-
-## Security
-
-Secrets are intentionally handled with environment variables and Git ignore rules:
-
-- `.env` and `.env.*` are ignored
-- `.env.example` is the committed template
-- Common key/certificate/database files are ignored
-- No API keys are hardcoded in tracked source files
